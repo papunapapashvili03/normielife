@@ -1,26 +1,225 @@
 @import "tailwindcss";
 
+/* White & mint. Clean, premium, with BitLife's friendliness in the shapes. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --raised: #f4f5f6;
+  --hover: #eceef0;
+  --line: #e6e7ea;
+  --line-strong: #d3d5da;
+  --text: #0b0c0f;
+  --muted: #5f636b;
+  --faint: #9a9ea6;
+  /* Strong teal for text, bars and borders; soft mint for big friendly fills. */
+  --mint: #0d9488;
+  --mint-fill: #5eead4;
+  --mint-ink: #04201c;
+  --rose: #e11d48;
+  --amber: #d97706;
+  --mcd-red: #da291c;
+  --mcd-yellow: #ffc72c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
+  --color-mint-fill: var(--mint-fill);
+  --color-mcd-red: var(--mcd-red);
+  --color-mcd-yellow: var(--mcd-yellow);
+  --color-rose: var(--rose);
+  --color-amber: var(--amber);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-dm-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.num {
+  font-family: var(--font-dm-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgb(15 17 22 / 0.04),
+    0 6px 20px rgb(15 17 22 / 0.03);
+}
+
+:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+/* The one loud control: BitLife's "Age" button, made premium. */
+.age-btn {
+  background: var(--mint-fill);
+  color: var(--mint-ink);
+  border-radius: 999px;
+  transition:
+    transform 120ms ease,
+    filter 120ms ease;
+}
+.age-btn:hover {
+  filter: brightness(0.97) saturate(1.1);
+}
+.age-btn:active {
+  transform: scale(0.98);
+}
+
+@keyframes rise-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.rise-in {
+  animation: rise-in 240ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes tape {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.tape {
+  animation: tape 60s linear infinite;
+}
+.tape:hover {
+  animation-play-state: paused;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet-up {
+  animation: sheet-up 200ms ease-out both;
+}
+
+/* Chart: newest segment draws itself in. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1100ms cubic-bezier(0.3, 0.6, 0.3, 1) forwards;
+}
+
+/* McDonald's clock-in intro. */
+@keyframes arches {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.arches {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: arches 1200ms cubic-bezier(0.5, 0, 0.2, 1) 150ms forwards;
+}
+@keyframes pop {
+  0% {
+    transform: translateY(14px) scale(0.92);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(-2px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+.pop {
+  opacity: 0;
+  animation: pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .draw,
+  .arches {
+    stroke-dashoffset: 0;
+  }
+  .pop {
+    opacity: 1;
+  }
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

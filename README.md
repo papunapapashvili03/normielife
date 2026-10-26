@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DEGEN LIFE
 
-## Getting Started
+BitLife for crypto degenerates. A browser life simulator where you discover memecoins on TikTok, buy shitcoins, get rugged, work at McDonald's, come back, and maybe become a legend.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm test        # engine tests + balance simulation (~2 min)
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Saves live in the browser (localStorage). Every life has a run seed (`RUN #123456`); entering the same seed in the character creator reproduces the same starting stats, money and world.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it's built
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Everything runs client-side. The game engine is plain TypeScript in `lib/game/` with no React:
 
-## Learn More
+| File | What it does |
+|---|---|
+| `config.ts` | Every balance number: salary, expenses, coin fate odds, status thresholds, pacing, death curve. `JOB.name` renames the one job everywhere. |
+| `coins.ts` / `market.ts` | Procedural memecoins with hidden price paths, monthly market ticks, pump/crash/rug signals |
+| `portfolio.ts` | Buying, selling, liquidity caps, rugs, run stats |
+| `life.ts` | The monthly loop: salary, expenses, market, broke detection, death, retirement |
+| `events/engine.ts` | The generic event engine: requirements, weighting, outcomes, effects, templating |
+| `events/data/*.ts` | All event content (120+ events) |
+| `reducer.ts` | UI actions → engine calls. State is cloned per action; RNG state lives in the save, so runs are deterministic |
 
-To learn more about Next.js, take a look at the following resources:
+The UI is in `components/game/`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Adding events
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Append an `EventDef` to any file in `lib/game/events/data/`. The engine never needs to change.
 
-## Deploy on Vercel
+```ts
+{
+  id: "life_lost_wallet",
+  category: "life",            // crypto | trade | kol | life | mcd | social | legendary
+  weight: 6,                   // relative frequency
+  cooldown: 24,                // months before it can repeat
+  req: { minCash: 200, maxStatus: "degen" },
+  emoji: "👛",
+  title: "LOST WALLET",
+  setup: [{ type: "spawnCoin", fate: "luck" }],   // binds {coin}
+  text: "You find a wallet on the bus. There's a sticker for {coin} on it.",
+  choices: [
+    { text: "Return it", outcomes: [{ text: "Good karma.", effects: [{ type: "stat", stat: "luck", delta: 3 }] }] },
+    {
+      text: "Ape the sticker coin",
+      req: { minCash: 20 },
+      outcomes: [
+        { weight: 2, mods: { luck: 0.6 }, text: "{coin} {moved}!", effects: [{ type: "buy", size: "small" }, { type: "coinMove", mult: [2, 5] }] },
+        { weight: 3, text: "It rugs. Karma.", effects: [{ type: "buy", size: "small" }, { type: "coinMove", mult: 0 }] },
+      ],
+    },
+  ],
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Requirements** (`req`): age, cash, net worth, portfolio, status, stats, followers, employment, flags, previously seen events, rugs, wins, times broke, held positions, a recent big loss.
+- **Effects**: `cash`, `stat`, `followers`, `reputation`, `spawnCoin`, `pickKol`, `pickHeld`, `pickMarket`, `buy`, `sell`, `sellAll`, `wipePositions`, `coinMove`, `marketMove`, `research`, `flag`, `queue` (event chains), `job`, `history`, `runStat`, `kolIntel`.
+- **Templates**: `{name}`, `{job}`, `{salary}`, `{cash}`, `{nw}`, `{coin}`, `{mc}`, `{kol}`, `{kolRead}`, `{amount}`, `{value}`, `{proceeds}`, `{pnl}`, `{moved}`, `{pct}`, `{multiple}`, and so on.
+- **Signal events** (`signal: "pump" | "bigpump" | "megapump" | "crash" | "rug" | "paperhand" | "diamond"`) fire when the market does that to a coin you hold.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`npm test` validates all content: unique ids, every queued follow-up exists, and every template variable resolves.
