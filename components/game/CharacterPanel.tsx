@@ -9,6 +9,7 @@ import type { Action } from "@/lib/game/reducer";
 import { socialTier } from "@/lib/game/status";
 import type { GameState } from "@/lib/game/types";
 import { STAT_ROWS, StatBar } from "./bits";
+import { currentMood } from "@/lib/game/mood";
 import { JobControls } from "./JobControls";
 import { FullPortrait } from "./Portrait";
 import { nextStatus } from "./progress";
@@ -23,9 +24,9 @@ export function CharacterPanel({ state, dispatch, onExit }: { state: GameState; 
   return (
     <div className="space-y-3">
       <section className="panel overflow-hidden">
-        <div className="relative h-44 overflow-hidden border-b border-line bg-[radial-gradient(circle_at_70%_35%,color-mix(in_oklab,var(--mint)_14%,transparent),transparent_60%)]">
-          <div className="absolute -bottom-16 right-2 top-3">
-            <FullPortrait id={p.avatar} priority />
+        <div className="relative h-52 overflow-hidden border-b border-line bg-[radial-gradient(circle_at_70%_35%,color-mix(in_oklab,var(--mint)_14%,transparent),transparent_60%)]">
+          <div className="absolute -bottom-12 right-2 top-9">
+            <FullPortrait id={p.avatar} mood={currentMood(state)} priority />
           </div>
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-panel to-transparent" aria-hidden />
           <div className="absolute bottom-3 left-4 max-w-[55%]">

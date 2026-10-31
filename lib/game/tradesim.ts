@@ -8,6 +8,7 @@ import { KOLS } from "./kols";
 import { moveCoin } from "./market";
 import { buy, getPosition, maxBuy, netWorth, positionValue, sell, settleRugs } from "./portfolio";
 import { chance, pick, range, weightedKey, type RngHolder } from "./rng";
+import { moodFromMissed, moodFromTrade, setMood } from "./mood";
 import { updateProgress } from "./status";
 import type { CoinFate, GameState, SimNote, SimScenario, SimScript, SizeBand, Tone, TradeSim } from "./types";
 
@@ -163,13 +164,13 @@ function readFor(s: GameState, script: SimScript): string {
   return "🧠 Your read: nothing special. Could chop around all day.";
 }
 
-function sceneFor(s: GameState, scenario: SimScenario, ticker: string, mc: number, pre: number[], holdersN: number): string {
+function sceneFor(s: GameState, scenario: SimScenario, ticker: string, mc: number, pre: number[], holdersN: number, kolId?: string): string {
   const t = `$${ticker}`;
   const m = money(mc);
   const run = pct(1 / pre[0] - 1);
   switch (scenario) {
     case "kol": {
-      const k = pick(s, KOLS);
+      const k = KOLS.find((x) => x.id === kolId) ?? pick(s, KOLS);
       return `${k.handle} just posted ${t} to ${compact(k.audience)} followers. It's already ${run} on the day.\n\nMC ${m}. Everyone's watching the same chart.`;
     }
     case "launch":
@@ -193,11 +194,18 @@ export function canHunt(s: GameState): boolean {
   return canStartSim(s) && s.lastSeen["trade_hunt"] !== s.month;
 }
 
-export function startTradeSim(s: GameState, scenario?: SimScenario): boolean {
-  if (!canStartSim(s)) return false;
+/** Builds a trade (and spawns its coin) without putting it on the board. */
+export function buildTradeSim(s: GameState, scenario?: SimScenario, kolId?: string): TradeSim {
   const sc = scenario ?? pick(s, Object.keys(PRE_SHAPES) as SimScenario[]);
   const weights = { ...BASE_WEIGHTS };
   for (const [k, v] of Object.entries(SCENARIO_BIAS[sc])) weights[k as SimScript] *= v ?? 1;
+  // A named caller's track record decides how their calls tend to play out.
+  const kol = KOLS.find((x) => x.id === kolId);
+  if (kol) {
+    for (const k of PROMISING) weights[k] *= 0.5 + kol.accuracy;
+    weights.pumpdump *= 0.5 + kol.dump;
+    weights.rug *= 0.5 + kol.dump;
+  }
   const l = (s.player.stats.luck - 50) / 50;
   for (const k of PROMISING) weights[k] *= 1 + l * 0.3;
   for (const k of ["rug", "bleed"] as const) weights[k] *= 1 - l * 0.15;
@@ -216,12 +224,13 @@ export function startTradeSim(s: GameState, scenario?: SimScenario): boolean {
   }
   const mediumBag = Math.min(Math.floor(netWorth(s) * SIZE_BANDS.medium.pct), maxBuy(s, coin));
 
-  s.sim = {
+  return {
     coinId: coin.id,
     scenario: sc,
     script,
+    kolId,
     title: TITLES[sc],
-    scene: sceneFor(s, sc, coin.ticker, marketCap(coin), pre, holders(coin)),
+    scene: sceneFor(s, sc, coin.ticker, marketCap(coin), pre, holders(coin), kolId),
     read: readFor(s, script),
     points,
     preLen: pre.length,
@@ -239,6 +248,11 @@ export function startTradeSim(s: GameState, scenario?: SimScenario): boolean {
     notes: [],
     hypothetical: Math.max(0, mediumBag),
   };
+}
+
+export function startTradeSim(s: GameState, scenario?: SimScenario): boolean {
+  if (!canStartSim(s)) return false;
+  s.sim = buildTradeSim(s, scenario);
   s.lastSeen["trade_sim"] = s.month;
   return true;
 }
@@ -283,6 +297,7 @@ function finish(s: GameState, sim: TradeSim) {
       text: `You sat this one out. ${ticker} finished the day ${pct(total - 1)}. A ${money(sim.hypothetical)} bag would be ${money(would)}.`,
       tone: total >= 1 ? "bad" : "good",
     });
+    setMood(s, moodFromMissed(total));
   } else {
     const p = getPosition(s, sim.coinId);
     const open = p ? positionValue(s, p) : 0;
@@ -294,6 +309,7 @@ function finish(s: GameState, sim: TradeSim) {
       tone: pnl >= 0 ? "good" : "bad",
     });
     addLog(s, `Day trade on ${ticker}: ${money(pnl, { sign: true })}`, pnl >= 0 ? "good" : "bad");
+    setMood(s, coin?.rugged ? "rage" : moodFromTrade(sim.stake > 0 ? pnl / sim.stake : 0));
   }
   updateProgress(s);
 }
@@ -320,10 +336,71 @@ export function simEnter(s: GameState, choice: SizeBand | "pass") {
   trimForFees(s, sim.coinId, r.spent);
   sim.entered = true;
   sim.stake += r.spent;
+  if (sim.live) {
+    sim.phase = "live";
+    updateProgress(s);
+    return;
+  }
   revealLeg(s, sim);
   if (getPosition(s, sim.coinId) && sim.legsRevealed < sim.legMults.length) sim.phase = "decide";
   else finish(s, sim);
   updateProgress(s);
+}
+
+// ---------------------------------------------------------------------------
+// Live trading: one price tick at a time, sell whenever you want.
+// ---------------------------------------------------------------------------
+
+/** Advance the live chart by one point and move the coin's real price with it. */
+export function simTick(s: GameState) {
+  const sim = s.sim;
+  if (!sim || sim.phase !== "live") return;
+  const coin = getCoin(s, sim.coinId);
+  const last = sim.points.length - 1;
+  if (!coin || sim.revealed >= last) {
+    finish(s, sim);
+    return;
+  }
+  const from = sim.points[sim.revealed];
+  const to = sim.points[sim.revealed + 1];
+  sim.revealed++;
+  if (from > 0) moveCoin(coin, to / from);
+  settleRugs(s);
+  const legIdx = sim.legEnds.indexOf(sim.revealed);
+  if (legIdx >= 0) {
+    sim.legsRevealed = legIdx + 1;
+    sim.notes.push(noteFor(s, coin.ticker, LEG_LABELS[legIdx], sim.legMults[legIdx]));
+  }
+  if (sim.revealed >= last) finish(s, sim);
+  else updateProgress(s);
+}
+
+export type LiveAction = "sell" | "half" | "add";
+
+export function simLive(s: GameState, action: LiveAction) {
+  const sim = s.sim;
+  if (!sim || sim.phase !== "live") return;
+  const coin = getCoin(s, sim.coinId);
+  if (!coin) return;
+  if (action === "add") {
+    const amount = Math.floor(Math.min(s.cash, maxBuy(s, coin), netWorth(s) * SIZE_BANDS.small.pct * 2));
+    const r = buy(s, sim.coinId, amount);
+    if (r.spent > 0) {
+      trimForFees(s, sim.coinId, r.spent);
+      sim.stake += r.spent;
+      sim.adds.push(sim.revealed);
+    }
+  } else if (getPosition(s, sim.coinId)) {
+    const r = sell(s, sim.coinId, action === "sell" ? 1 : 0.5);
+    sim.realized += r.proceeds;
+    sim.exits.push(sim.revealed);
+  }
+  updateProgress(s);
+}
+
+/** Fast-forward a live trade to the close. */
+export function simSkip(s: GameState) {
+  for (let i = 0; i < 200 && s.sim?.phase === "live"; i++) simTick(s);
 }
 
 export type SimAction = "sell" | "half" | "hold" | "add";

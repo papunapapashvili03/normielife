@@ -7,7 +7,8 @@ import { checkBroke, nextMonth, retire, work, workUntil } from "./life";
 import { quitJob } from "./job";
 import { buy, sell } from "./portfolio";
 import { updateProgress } from "./status";
-import { canHunt, simClose, simDecide, simEnter, startTradeSim, type SimAction } from "./tradesim";
+import { advanceWeek, goIn, ignoreCall, pingCall } from "./calls";
+import { canHunt, simClose, simDecide, simEnter, simLive, simSkip, simTick, startTradeSim, type LiveAction, type SimAction } from "./tradesim";
 import type { GameState, SizeBand } from "./types";
 
 export type Action =
@@ -28,7 +29,13 @@ export type Action =
   | { type: "SIM_ENTER"; choice: SizeBand | "pass" }
   | { type: "SIM_DECIDE"; action: SimAction }
   | { type: "SIM_CLOSE" }
-  | { type: "DISMISS_INTRO" };
+  | { type: "DISMISS_INTRO" }
+  | { type: "SIM_TICK" }
+  | { type: "SIM_LIVE"; action: LiveAction }
+  | { type: "SIM_SKIP" }
+  | { type: "CALL_PING" }
+  | { type: "CALL_GO_IN" }
+  | { type: "CALL_IGNORE" };
 
 export function canPost(s: GameState): boolean {
   return !s.ended && !s.current && !s.sim && "discovered" in s.flags && s.lastSeen["social_post"] !== s.month;
@@ -52,6 +59,10 @@ export function reducer(state: GameState | null, action: Action): GameState | nu
       presentDueQueue(s);
       break;
     case "NEXT_MONTH":
+      if (s.sim || s.current) return state;
+      // Sleeping through a call means you ignored it; the new month starts fresh.
+      if (s.offer) ignoreCall(s, false);
+      s.week = 0;
       nextMonth(s);
       break;
     case "BUY":
@@ -94,9 +105,35 @@ export function reducer(state: GameState | null, action: Action): GameState | nu
     case "SIM_DECIDE":
       simDecide(s, action.action);
       break;
-    case "SIM_CLOSE":
+    case "SIM_CLOSE": {
       if (s.sim?.phase !== "done") return state;
+      const fromCall = s.sim.fromCall;
       simClose(s);
+      checkBroke(s);
+      if (fromCall && !s.current) advanceWeek(s);
+      presentDueQueue(s);
+      break;
+    }
+    case "SIM_TICK":
+      if (s.sim?.phase !== "live") return state;
+      simTick(s);
+      break;
+    case "SIM_LIVE":
+      simLive(s, action.action);
+      break;
+    case "SIM_SKIP":
+      simSkip(s);
+      break;
+    case "CALL_PING":
+      if (!pingCall(s)) return state;
+      break;
+    case "CALL_GO_IN":
+      if (!s.offer) return state;
+      goIn(s);
+      break;
+    case "CALL_IGNORE":
+      if (!s.offer) return state;
+      ignoreCall(s);
       checkBroke(s);
       presentDueQueue(s);
       break;

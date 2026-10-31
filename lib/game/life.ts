@@ -19,6 +19,7 @@ import { money } from "./format";
 import { addHistory, addLog, ageOf, hasFlag, setFlag } from "./history";
 import { payday, quitJob, startJob } from "./job";
 import { tickMarket } from "./market";
+import { setMood } from "./mood";
 import { forceSell, netWorth, portfolioValue, sellAll, settleRugs } from "./portfolio";
 import { chance, pick, rand } from "./rng";
 import { passiveFollowers, updateProgress } from "./status";
@@ -67,6 +68,7 @@ export function checkBroke(s: GameState) {
   const nw = netWorth(s);
   if (!broke && hasFlag(s, "first_trade") && !s.job.employed && s.cash < BROKE_THRESHOLD && portfolioValue(s) < BROKE_THRESHOLD) {
     setFlag(s, "broke");
+    setMood(s, "very_sad");
     s.run.timesBroke++;
     addHistory(s, "💀", s.run.timesBroke === 1 ? "Went broke for the first time." : `Went broke. Again. (x${s.run.timesBroke})`, true);
     s.queue.unshift({ event: "sys_broke", at: s.month, ctx: {} });

@@ -13,17 +13,18 @@ npm run build
 
 Saves live in the browser (localStorage). Every life has a run seed (`RUN #123456`); entering the same seed in the character creator reproduces the same starting stats, money and world.
 
-## Three ways to play
+## How it plays
 
-Same game, same save. Switch any time from the title screen or the in-game links.
+You live the whole life through your phone:
 
-| Route | Skin | The twist |
-|---|---|---|
-| `/` | Terminal | A trading desk: ticker tape, order ticket, positions table. |
-| `/phone` | Phone | You live through your phone. Sleep to skip ahead, wake to a lock screen of notifications, answer events as text threads. On desktop the phone sits on a desk with your photo, a sticky note, a receipt of your trades and a McDonald's name tag when you're on shift. |
-| `/deck` | Deck | A tabletop card game. Draw a card to live a month, play a card from your hand to choose, collect coins whose rarity is hidden until they die. |
+- **Sleep** to skip ahead, then wake up to a lock screen of notifications.
+- **Events arrive as text threads**; answer with quick replies.
+- **Famous traders post calls non-stop** while you're on your phone. Go in (a live trade in the Charts app, ticking in real time) or ignore it and find out what you missed. Four calls make a month.
+- **Your character's face reacts** to wins and losses.
+- **Apps:** Chirp, Charts, Bags, Bank, McJobs, Memories, Scanner, Me and Settings. They open and close like iPhone apps.
+- On desktop the phone sits on a desk with your photo, a sticky note, a receipt of your trades, and a McDonald's name tag while you're on shift.
 
-Skins live in `components/game/` (`MainGame.tsx`, `phone/`, `deck/`) and share the engine, hotkeys and pop-ups through `components/game/shell.tsx`.
+The phone UI lives in `components/game/phone/`; shared pieces (order ticket, charts, pop-ups, hotkeys) are in `components/game/`.
 
 ## How it's built
 

@@ -1,5 +1,5 @@
 // Every balance number in the game lives here.
-import type { CoinFate, CoinTier, EventCategory, Requirement, SizeBand, StatusId } from "./types";
+import type { CoinFate, CoinTier, EventCategory, Mood, Requirement, SizeBand, StatusId } from "./types";
 
 export const SAVE_VERSION = 1;
 
@@ -229,10 +229,27 @@ export interface Portrait {
   height: number;
   label: string;
   face: { x: number; y: number; h: number };
+  /** Optional full-body art per mood (public/characters/<n>_<mood>.png). Missing moods fall back to `src`. */
+  moods?: Partial<Record<Mood, { src: string; width: number; height: number }>>;
 }
 
 export const PORTRAITS: Portrait[] = [
-  { id: "p1", src: "/characters/1.png", width: 283, height: 523, label: "Blond hair, white tee", face: { x: 62, y: 14.5, h: 0.29 } },
+  {
+    id: "p1",
+    src: "/characters/1.png",
+    width: 283,
+    height: 523,
+    label: "Blond hair, white tee",
+    face: { x: 62, y: 14.5, h: 0.29 },
+    moods: {
+      very_happy: { src: "/characters/1_very_happy.png", width: 619, height: 1024 },
+      happy: { src: "/characters/1_happy.png", width: 619, height: 1024 },
+      disappointed: { src: "/characters/1_dissapointed.png", width: 554, height: 1024 },
+      sad: { src: "/characters/1_sad.png", width: 554, height: 1024 },
+      very_sad: { src: "/characters/1_very_sad.png", width: 554, height: 1024 },
+      rage: { src: "/characters/1_rage.png", width: 554, height: 1024 },
+    },
+  },
   { id: "p2", src: "/characters/2.png", width: 307, height: 490, label: "Braided bun, green shirt", face: { x: 50, y: 13.5, h: 0.275 } },
 ];
 

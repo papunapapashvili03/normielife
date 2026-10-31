@@ -12,14 +12,6 @@ import { BrokeModal, MODAL_EVENTS, McdIntro } from "./Overlays";
 
 export type GameProps = { state: GameState; dispatch: Dispatch<Action>; onExit: () => void };
 
-export type Skin = "terminal" | "phone" | "deck";
-
-export const SKINS: { id: Skin; href: string; label: string; blurb: string }[] = [
-  { id: "terminal", href: "/", label: "Terminal", blurb: "Trading desk" },
-  { id: "phone", href: "/phone", label: "Phone", blurb: "Live it on your phone" },
-  { id: "deck", href: "/deck", label: "Deck", blurb: "Draw your life card by card" },
-];
-
 export function introOpen(state: GameState): boolean {
   return "mcd_intro" in state.flags && !state.current;
 }

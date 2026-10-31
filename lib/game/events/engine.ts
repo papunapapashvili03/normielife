@@ -18,6 +18,7 @@ import { getKol, kolReadLine, KOLS } from "../kols";
 import { moveCoin, trendingCoins } from "../market";
 import { buy, getPosition, netWorth, portfolioValue, positionValue, sell, sellAll, settleRugs, wipePositions } from "../portfolio";
 import { chance, int, pick, range, weighted } from "../rng";
+import { moodFromChange, moodFromSignal, setMood } from "../mood";
 import { updateProgress } from "../status";
 import type {
   Amount,
@@ -109,6 +110,7 @@ export function present(s: GameState, id: string, ctx: Ctx = {}): boolean {
   const c: Ctx = { ...ctx };
   for (const e of ev.setup ?? []) if (!applyEffect(s, e, c)) return false;
   if (Array.isArray(ev.text)) c._v = int(s, 0, ev.text.length - 1);
+  if (ev.signal) setMood(s, moodFromSignal(ev.signal, Number(c.pct) || 0));
   s.current = { id, ctx: c, stage: "choose" };
   s.seen[id] = (s.seen[id] ?? 0) + 1;
   s.lastSeen[id] = s.month;
@@ -208,6 +210,7 @@ export function choose(s: GameState, choiceIndex: number) {
     if (d !== 0) statDeltas[k] = d;
   }
   const nwDelta = netWorth(s) - nwBefore;
+  if (!ev.signal) setMood(s, moodFromChange(nwDelta / Math.max(1, nwBefore)));
   cur.stage = "result";
   cur.choice = choiceIndex;
   cur.result = {

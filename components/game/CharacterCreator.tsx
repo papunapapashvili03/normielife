@@ -7,7 +7,7 @@ import { money } from "@/lib/game/format";
 import { newSeed } from "@/lib/game/rng";
 import { STAT_ROWS, StatBar } from "./bits";
 import { FullPortrait } from "./Portrait";
-import { Logo } from "./TopBar";
+import { Logo } from "./Logo";
 
 const field = "mt-1.5 w-full rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-[15px] outline-none focus:border-mint";
 
@@ -71,7 +71,7 @@ export function CharacterCreator({
                     onClick={() => set("avatar", p.id)}
                     className={`relative h-52 overflow-hidden rounded-2xl border transition-colors ${on ? "border-mint bg-mint/[0.07]" : "border-line bg-raised hover:border-line-strong"}`}
                   >
-                    <span className="absolute inset-x-0 -bottom-10 top-3 flex justify-center">
+                    <span className="absolute inset-x-0 -bottom-10 top-7 flex justify-center">
                       <FullPortrait id={p.id} priority />
                     </span>
                     <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-panel to-transparent" aria-hidden />

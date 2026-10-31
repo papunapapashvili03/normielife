@@ -10,6 +10,9 @@ export type StatKey =
 
 export type Stats = Record<StatKey, number>;
 
+/** How your character feels right now. Drives which portrait is shown. */
+export type Mood = "neutral" | "very_happy" | "happy" | "disappointed" | "sad" | "very_sad" | "rage";
+
 export type StatusId = "normie" | "degen" | "trader" | "chad" | "whale" | "legend";
 
 export type Narrative =
@@ -230,7 +233,13 @@ export interface TradeSim {
   legMults: number[];
   legsRevealed: number;
   revealed: number;
-  phase: "setup" | "decide" | "done";
+  /** "live" = the price ticks in real time and you can sell whenever (phone skin). */
+  phase: "setup" | "decide" | "live" | "done";
+  /** Played tick by tick instead of leg by leg. */
+  live?: boolean;
+  /** Came from a KOL call notification (costs a week when it ends). */
+  fromCall?: boolean;
+  kolId?: string;
   entered: boolean;
   passed: boolean;
   stake: number;
@@ -240,6 +249,13 @@ export interface TradeSim {
   notes: SimNote[];
   /** What a medium bag would have done, for the "you passed" recap. */
   hypothetical: number;
+}
+
+export interface CallOffer {
+  id: number;
+  kolId: string;
+  text: string;
+  sim: TradeSim;
 }
 
 export interface GameState {
@@ -265,6 +281,15 @@ export interface GameState {
   current: ActiveEvent | null;
   /** Active trade simulation, if any. Optional for saves made before sims existed. */
   sim?: TradeSim | null;
+  /** A KOL call waiting for "go in" or "ignore". */
+  offer?: CallOffer | null;
+  /** How a call you ignored played out, for the follow-up notification. */
+  callResult?: { id: number; text: string; tone: Tone } | null;
+  nextCallId?: number;
+  /** Weeks used this month by calls (4 calls = one month). */
+  week?: number;
+  /** Latest emotional reaction and when it happened; fades after a month. */
+  mood?: { kind: Mood; month: number } | null;
   signals: Signal[];
   history: HistoryEntry[];
   log: LogEntry[];

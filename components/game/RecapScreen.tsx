@@ -5,7 +5,7 @@ import { buildRecap, shareText } from "@/lib/game/recap";
 import { newSeed } from "@/lib/game/rng";
 import type { GameState } from "@/lib/game/types";
 import { Timeline } from "./Story";
-import { Logo } from "./TopBar";
+import { Logo } from "./Logo";
 import { Avatar } from "./Portrait";
 
 export function RecapScreen({ state, onNewLife }: { state: GameState; onNewLife: (seed: number) => void }) {

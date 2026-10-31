@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getPortrait } from "@/lib/game/config";
+import type { Mood } from "@/lib/game/types";
 
 /**
  * Round avatar cropped to the character's face. Falls back to the stored value as an
@@ -38,8 +39,8 @@ export function Avatar({ id, size = 40, className = "" }: { id: string; size?: n
   );
 }
 
-/** Full-figure character art. */
-export function FullPortrait({ id, className = "", priority = false }: { id: string; className?: string; priority?: boolean }) {
+/** Full-figure character art. With a mood, shows that emotion's art when the character has it. */
+export function FullPortrait({ id, mood = "neutral", className = "", priority = false }: { id: string; mood?: Mood; className?: string; priority?: boolean }) {
   const p = getPortrait(id);
   if (!p) {
     return (
@@ -48,15 +49,27 @@ export function FullPortrait({ id, className = "", priority = false }: { id: str
       </span>
     );
   }
+  const art = (mood !== "neutral" && p.moods?.[mood]) || { src: p.src, width: p.width, height: p.height };
   return (
     <Image
-      src={p.src}
-      alt={p.label}
-      width={p.width}
-      height={p.height}
+      key={art.src}
+      src={art.src}
+      alt={`${p.label}, looking ${MOOD_WORDS[mood]}`}
+      width={art.width}
+      height={art.height}
       priority={priority}
       sizes="(min-width: 1024px) 280px, 60vw"
-      className={`h-full w-auto max-w-none object-contain ${className}`}
+      className={`fade-in h-full w-auto max-w-none object-contain ${className}`}
     />
   );
 }
+
+const MOOD_WORDS: Record<Mood, string> = {
+  neutral: "calm",
+  very_happy: "thrilled",
+  happy: "happy",
+  disappointed: "disappointed",
+  sad: "sad",
+  very_sad: "crushed",
+  rage: "furious",
+};
