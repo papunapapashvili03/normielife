@@ -1,79 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
-import { getEvent, visibleChoices } from "@/lib/game/events/engine";
+import { useEffect, useRef, useState, type Dispatch } from "react";
 import type { Action } from "@/lib/game/reducer";
-import { stakeOptions } from "@/lib/game/tradesim";
 import type { GameState } from "@/lib/game/types";
 import { CharacterPanel } from "./CharacterPanel";
 import { CtPanel } from "./CtPanel";
 import { EventStage } from "./EventStage";
-import { BrokeModal, MODAL_EVENTS, McdIntro } from "./Overlays";
+import { MODAL_EVENTS } from "./Overlays";
+import { GameOverlays, useGameHotkeys, type GameProps } from "./shell";
 import { TradeSimCard } from "./TradeSim";
-import { useHotkeys, useIsDesktop } from "./hooks";
+import { useIsDesktop } from "./hooks";
 import { MarketList } from "./Market";
 import { OrderTicket } from "./OrderTicket";
 import { ActivityLog, PortfolioSummary, PositionsTable } from "./Positions";
 import { Story } from "./Story";
 import { MobileHeader, TopBar } from "./TopBar";
 
-type Props = { state: GameState; dispatch: Dispatch<Action>; onExit: () => void };
+type Props = GameProps;
 
 export function MainGame(props: Props) {
   const { state, dispatch } = props;
   const isDesktop = useIsDesktop();
 
-  const introOpen = "mcd_intro" in state.flags && !state.current;
-  const brokeOpen = !!state.current && MODAL_EVENTS.has(state.current.id);
-
-  const onKey = useCallback(
-    (key: string) => {
-      if (introOpen) return false; // the intro handles its own keys
-      const sim = state.sim;
-      if (sim) {
-        const n = Number(key);
-        if (sim.phase === "setup" && Number.isInteger(n) && n >= 1) {
-          const opts = stakeOptions(state);
-          if (n <= opts.length) dispatch({ type: "SIM_ENTER", choice: opts[n - 1].band });
-          else if (n === opts.length + 1) dispatch({ type: "SIM_ENTER", choice: "pass" });
-          else return false;
-          return true;
-        }
-        if (sim.phase === "decide" && n >= 1 && n <= 4) {
-          const action = (["sell", "half", "hold", "add"] as const)[n - 1];
-          if (action === "add" && state.cash < 20) return false;
-          dispatch({ type: "SIM_DECIDE", action });
-          return true;
-        }
-        if (sim.phase === "done" && (key === " " || key === "Enter")) {
-          dispatch({ type: "SIM_CLOSE" });
-          return true;
-        }
-        return false;
-      }
-      const cur = state.current;
-      if (cur?.stage === "choose") {
-        const n = Number(key);
-        if (!Number.isInteger(n) || n < 1) return false;
-        const ev = getEvent(cur.id);
-        const vis = ev ? visibleChoices(state, ev, cur.ctx) : [];
-        if (!vis[n - 1]) return false;
-        dispatch({ type: "CHOOSE", index: vis[n - 1].index });
-        return true;
-      }
-      if (key !== " " && key !== "Enter") return false;
-      dispatch({ type: cur ? "CONTINUE" : "NEXT_MONTH" });
-      return true;
-    },
-    [state, dispatch, introOpen],
-  );
-  useHotkeys(onKey);
+  useGameHotkeys(state, dispatch);
 
   return (
     <>
       {isDesktop ? <DesktopLayout {...props} /> : <MobileLayout {...props} />}
-      {brokeOpen && <BrokeModal state={state} dispatch={dispatch} />}
-      {introOpen && <McdIntro state={state} dispatch={dispatch} />}
+      <GameOverlays state={state} dispatch={dispatch} />
     </>
   );
 }

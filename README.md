@@ -13,6 +13,18 @@ npm run build
 
 Saves live in the browser (localStorage). Every life has a run seed (`RUN #123456`); entering the same seed in the character creator reproduces the same starting stats, money and world.
 
+## Three ways to play
+
+Same game, same save. Switch any time from the title screen or the in-game links.
+
+| Route | Skin | The twist |
+|---|---|---|
+| `/` | Terminal | A trading desk: ticker tape, order ticket, positions table. |
+| `/phone` | Phone | You live through your phone. Sleep to skip ahead, wake to a lock screen of notifications, answer events as text threads. On desktop the phone sits on a desk with your photo, a sticky note, a receipt of your trades and a McDonald's name tag when you're on shift. |
+| `/deck` | Deck | A tabletop card game. Draw a card to live a month, play a card from your hand to choose, collect coins whose rarity is hidden until they die. |
+
+Skins live in `components/game/` (`MainGame.tsx`, `phone/`, `deck/`) and share the engine, hotkeys and pop-ups through `components/game/shell.tsx`.
+
 ## How it's built
 
 Everything runs client-side. The game engine is plain TypeScript in `lib/game/` with no React:

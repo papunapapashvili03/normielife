@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { JOB, STARTING_CASH, STATUSES } from "@/lib/game/config";
 import { money } from "@/lib/game/format";
 import { ageOf } from "@/lib/game/history";
 import { netWorth } from "@/lib/game/portfolio";
 import { newSeed } from "@/lib/game/rng";
 import type { GameState } from "@/lib/game/types";
+import { SKINS, type Skin } from "./shell";
 import { Logo } from "./TopBar";
 import { Avatar } from "./Portrait";
 
@@ -21,7 +23,7 @@ const SAMPLE: [number, string, string, string?][] = [
   [76, "🪦", "Died holding a bag. Never sold."],
 ];
 
-export function TitleScreen({ saved, onContinue, onNewLife }: { saved: GameState | null; onContinue: () => void; onNewLife: (seed: number) => void }) {
+export function TitleScreen({ skin = "terminal", saved, onContinue, onNewLife }: { skin?: Skin; saved: GameState | null; onContinue: () => void; onNewLife: (seed: number) => void }) {
   const st = saved ? STATUSES[saved.status] : null;
   return (
     <main className="mx-auto grid min-h-dvh max-w-6xl items-center gap-12 px-5 py-10 lg:grid-cols-[1.1fr_1fr] lg:px-10">
@@ -70,6 +72,25 @@ export function TitleScreen({ saved, onContinue, onNewLife }: { saved: GameState
           </button>
         </div>
         {saved && <p className="mt-3 text-xs text-faint">A new life replaces your saved one once you&apos;re born.</p>}
+
+        <nav className="mt-10 max-w-md" aria-label="Choose how to play">
+          <p className="eyebrow">Play it as</p>
+          <ul className="mt-2 grid grid-cols-3 gap-2">
+            {SKINS.map((k) => (
+              <li key={k.id}>
+                <Link
+                  href={k.href}
+                  aria-current={k.id === skin ? "page" : undefined}
+                  className={`block rounded-2xl border px-3 py-2.5 transition-colors ${k.id === skin ? "border-mint bg-mint/[0.07]" : "border-line hover:border-line-strong hover:bg-raised"}`}
+                >
+                  <span className="block text-[14px] font-extrabold">{k.label}</span>
+                  <span className="block text-[11px] leading-snug text-muted">{k.blurb}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-faint">Same save in every style. Switch any time.</p>
+        </nav>
       </div>
 
       <figure className="panel hidden p-6 lg:block" aria-label="An example life">

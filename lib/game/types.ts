@@ -195,6 +195,8 @@ export interface ActiveEvent {
   id: string;
   ctx: Ctx;
   stage: "choose" | "result";
+  /** Index of the choice that was made (set once stage is "result"). */
+  choice?: number;
   result?: EventResult;
 }
 

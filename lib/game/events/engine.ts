@@ -209,6 +209,7 @@ export function choose(s: GameState, choiceIndex: number) {
   }
   const nwDelta = netWorth(s) - nwBefore;
   cur.stage = "result";
+  cur.choice = choiceIndex;
   cur.result = {
     text: render(s, outcome.text, cur.ctx),
     tone: outcome.tone ?? (nwDelta > 1 ? "good" : nwDelta < -1 ? "bad" : "neutral"),

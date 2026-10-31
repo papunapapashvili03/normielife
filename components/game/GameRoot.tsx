@@ -4,13 +4,22 @@ import { useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "
 import { reducer } from "@/lib/game/reducer";
 import { clearSave, parseSave, readSaveRaw, subscribeSave, writeSave } from "@/lib/game/save";
 import { CharacterCreator } from "./CharacterCreator";
+import { DeckGame } from "./deck/DeckGame";
 import { MainGame } from "./MainGame";
+import { PhoneGame } from "./phone/PhoneGame";
+import type { GameProps, Skin } from "./shell";
 import { RecapScreen } from "./RecapScreen";
 import { TitleScreen } from "./TitleScreen";
 
 type Screen = { name: "title" } | { name: "create"; seed: number };
 
-export function GameRoot() {
+const MAINS: Record<Skin, (p: GameProps) => React.ReactNode> = {
+  terminal: MainGame,
+  phone: PhoneGame,
+  deck: DeckGame,
+};
+
+export function GameRoot({ skin = "terminal" }: { skin?: Skin }) {
   const [state, dispatch] = useReducer(reducer, null);
   const [screen, setScreen] = useState<Screen>({ name: "title" });
   const saveRaw = useSyncExternalStore(subscribeSave, readSaveRaw, () => null);
@@ -35,8 +44,9 @@ export function GameRoot() {
   }
 
   if (state) {
+    const Main = MAINS[skin];
     return (
-      <MainGame
+      <Main
         state={state}
         dispatch={dispatch}
         onExit={() => {
@@ -59,6 +69,7 @@ export function GameRoot() {
 
   return (
     <TitleScreen
+      skin={skin}
       saved={saved}
       onContinue={() => saved && dispatch({ type: "LOAD", state: saved })}
       onNewLife={(seed) => setScreen({ name: "create", seed })}

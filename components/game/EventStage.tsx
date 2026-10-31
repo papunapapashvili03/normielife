@@ -12,7 +12,7 @@ import type { EventCategory, GameState, StatKey } from "@/lib/game/types";
 import { Delta, Kbd } from "./bits";
 import { MONTHS } from "./progress";
 
-const CATEGORY: Record<EventCategory, string> = {
+export const CATEGORY: Record<EventCategory, string> = {
   onboarding: "Origin story",
   crypto: "Crypto",
   trade: "Your bags",
@@ -81,7 +81,7 @@ export function EventStage({ state, dispatch }: { state: GameState; dispatch: Di
   );
 }
 
-function ResultChips({ result }: { result: NonNullable<NonNullable<GameState["current"]>["result"]> }) {
+export function ResultChips({ result }: { result: NonNullable<NonNullable<GameState["current"]>["result"]> }) {
   const chips: React.ReactNode[] = [];
   if (Math.abs(result.nwDelta) >= 1) {
     chips.push(
