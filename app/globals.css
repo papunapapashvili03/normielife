@@ -138,6 +138,26 @@ body {
   animation: draw 1100ms cubic-bezier(0.3, 0.6, 0.3, 1) forwards;
 }
 
+/* Landing: a whole life draws itself, then the marker notes land. */
+.draw-life {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 2600ms cubic-bezier(0.45, 0.1, 0.35, 1) 150ms forwards;
+}
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ink-in {
+  animation: ink-in 380ms ease-out both;
+}
+
 /* McDonald's clock-in intro. */
 @keyframes arches {
   from {
@@ -360,6 +380,7 @@ body {
     transition: none !important;
   }
   .draw,
+  .draw-life,
   .arches {
     stroke-dashoffset: 0;
   }

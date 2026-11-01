@@ -1,9 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Mono, Manrope } from "next/font/google";
+import { Caveat, DM_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+// Handwriting: desk props in the game, marker notes on the landing page.
+const caveat = Caveat({
+  variable: "--font-hand",
+  weight: ["500", "700"],
   subsets: ["latin"],
 });
 
@@ -26,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${manrope.variable} ${dmMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${dmMono.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full bg-bg">{children}</body>
     </html>
   );

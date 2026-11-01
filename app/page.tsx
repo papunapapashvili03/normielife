@@ -1,13 +1,24 @@
-import { Caveat } from "next/font/google";
-import { GameRoot } from "@/components/game/GameRoot";
+import { FinalCta } from "@/components/landing/FinalCta";
+import { Hero } from "@/components/landing/Hero";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { PhoneSection } from "@/components/landing/PhoneSection";
+import { RecapSection } from "@/components/landing/RecapSection";
+import { StatusLadder } from "@/components/landing/StatusLadder";
 
-// Handwriting for the props on the desk (sticky note, name tag).
-const caveat = Caveat({ variable: "--font-hand", weight: ["500", "700"], subsets: ["latin"] });
-
-export default function Home() {
+// Landing / marketing page. The game itself lives at /play.
+export default function Landing() {
   return (
-    <div className={caveat.variable}>
-      <GameRoot />
-    </div>
+    <>
+      <LandingNav />
+      <main>
+        <Hero />
+        <PhoneSection />
+        <StatusLadder />
+        <RecapSection />
+        <FinalCta />
+      </main>
+      <LandingFooter />
+    </>
   );
 }

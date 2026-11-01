@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, type Dispatch } from "react";
-import { JOB, RETIRE_MIN_AGE, STATUSES } from "@/lib/game/config";
+import { BASELINE_CASH, JOB, RETIRE_MIN_AGE, STATUSES } from "@/lib/game/config";
 import { canCall } from "@/lib/game/calls";
 import { currentMood } from "@/lib/game/mood";
 import { getCoin, marketCap } from "@/lib/game/coins";
@@ -24,42 +24,17 @@ import { JobControls } from "../JobControls";
 import { MarketList } from "../Market";
 import { OrderTicket } from "../OrderTicket";
 import { MODAL_EVENTS } from "../Overlays";
-import { FullPortrait } from "../Portrait";
 import { ActivityLog, PortfolioSummary, PositionsTable } from "../Positions";
 import { MONTHS, nextStatus } from "../progress";
 import { GameOverlays, useGameHotkeys, type GameProps } from "../shell";
 import { Story } from "../Story";
+import { PhoneDesk, PhotoFrame, Slip, SlipRule, StickyNote } from "./Desk";
+import { APPS, appById, IconArt, type AppId, type PhoneApp } from "./apps";
 import { Thread } from "./Thread";
 import { TradeApp } from "./TradeApp";
 
-type AppId = "charts" | "bags" | "chirp" | "bank" | "mcjobs" | "memories" | "me" | "scanner" | "settings";
 type Screen = { kind: "lock" } | { kind: "home" } | { kind: "event" } | { kind: "trade" } | { kind: "app"; app: AppId; coinId?: string };
 
-type PhoneApp = { id: AppId; name: string; glyph: string; bg: string; img?: string };
-
-/** Icons live in public/apps. `bg` matches each icon's background so the launch splash blends in. */
-const APPS: PhoneApp[] = [
-  { id: "charts", name: "Charts", glyph: "📈", bg: "#ccff00", img: "/apps/robinhood.png" },
-  { id: "bags", name: "Bags", glyph: "👜", bg: "#9786e4", img: "/apps/phantom.jpg" },
-  { id: "chirp", name: "Chirp", glyph: "🐦", bg: "#000000", img: "/apps/X.jpg" },
-  { id: "bank", name: "Bank", glyph: "🏦", bg: "#ffffff", img: "/apps/Revolut.png" },
-  { id: "mcjobs", name: "McJobs", glyph: "🍟", bg: "#ffffff", img: "/apps/mcdonalds.png" },
-  { id: "memories", name: "Memories", glyph: "🖼️", bg: "#ffffff" },
-  { id: "scanner", name: "Scanner", glyph: "🔭", bg: "#212121", img: "/apps/tokensniffer.jpg" },
-  { id: "me", name: "Me", glyph: "🪪", bg: "#e9e5ff" },
-  { id: "settings", name: "Settings", glyph: "⚙️", bg: "#d4d7de", img: "/apps/settings.jpg" },
-];
-const appById = (id: AppId) => APPS.find((a) => a.id === id)!;
-
-/** An app's icon art: the image if there is one, otherwise its emoji. */
-function IconArt({ app, size }: { app: PhoneApp; size: number }) {
-  if (app.img) return <Image src={app.img} alt="" fill sizes={`${size}px`} className="object-cover" />;
-  return (
-    <span aria-hidden style={{ fontSize: size * 0.5 }}>
-      {app.glyph}
-    </span>
-  );
-}
 const DOCK: AppId[] = ["chirp", "charts", "bags", "bank"];
 
 /** The wallpaper is your status. */
@@ -89,35 +64,25 @@ export function PhoneGame({ state, dispatch, onExit }: GameProps) {
 
   useGameHotkeys(state, dispatch);
 
-  const phone = <PhoneScreen state={state} dispatch={dispatch} onExit={onExit} screen={screen} setScreen={setScreen} sleptFrom={sleptFrom} framed={isDesktop} />;
-
-  if (!isDesktop) {
-    return (
-      <div className="h-dvh">
-        {phone}
-        <GameOverlays state={state} dispatch={dispatch} />
-      </div>
-    );
-  }
-
   return (
-    <div className="relative flex h-dvh items-center justify-center gap-10 overflow-hidden bg-[#d9d6cf] px-8">
-      <div className="flex w-64 flex-col items-center gap-10">
-        <PhotoFrame state={state} />
-        <StickyNote state={state} />
-      </div>
-      <div className="relative aspect-[390/844] h-[min(860px,calc(100dvh-3rem))] rounded-[54px] bg-[#0b0b0d] p-3 shadow-[0_30px_60px_rgb(0_0_0/0.28),inset_0_0_0_2px_#2b2b30]">
-        <div className="relative h-full overflow-hidden rounded-[42px] bg-white">
-          <span className="absolute left-1/2 top-2.5 z-30 h-7 w-28 -translate-x-1/2 rounded-full bg-black" aria-hidden />
-          {phone}
-        </div>
-      </div>
-      <div className="flex w-64 flex-col items-center gap-8">
-        {state.job.employed && <NameTag name={state.player.name} />}
-        <Receipt state={state} />
-      </div>
-      <GameOverlays state={state} dispatch={dispatch} />
-    </div>
+    <PhoneDesk
+      framed={isDesktop}
+      left={
+        <>
+          <PhotoFrame avatar={state.player.avatar} mood={currentMood(state)} caption={`${state.player.name}, ${ageOf(state)}`} />
+          <DeskNote state={state} />
+        </>
+      }
+      right={
+        <>
+          {state.job.employed && <NameTag name={state.player.name} />}
+          <Receipt state={state} />
+        </>
+      }
+      overlay={<GameOverlays state={state} dispatch={dispatch} />}
+    >
+      <PhoneScreen state={state} dispatch={dispatch} onExit={onExit} screen={screen} setScreen={setScreen} sleptFrom={sleptFrom} framed={isDesktop} />
+    </PhoneDesk>
   );
 }
 
@@ -357,7 +322,7 @@ function CallCard({ state, dispatch, onGoIn }: { state: GameState; dispatch: Dis
 }
 
 function StatusBar({ state, light, framed }: { state: GameState; light: boolean; framed: boolean }) {
-  const battery = Math.min(1, state.cash / 5000);
+  const battery = Math.min(1, state.cash / BASELINE_CASH);
   const bars = Math.min(4, 1 + Math.floor(Math.log10(Math.max(1, state.followers)) / 1.5));
   const ink = light ? "text-white" : "text-text";
   return (
@@ -696,33 +661,15 @@ function AppView({ state, dispatch, onExit, setScreen, app, coinId }: ScreenProp
 // The desk around the phone (desktop only)
 // ---------------------------------------------------------------------------
 
-function PhotoFrame({ state }: { state: GameState }) {
-  return (
-    <figure className="w-48 rotate-[-3deg] bg-white p-3 pb-2 shadow-[0_14px_28px_rgb(0_0_0/0.22)]">
-      <div className="flex h-52 items-end justify-center overflow-hidden bg-[#e9edf0]">
-        <div className="h-[90%]">
-          <FullPortrait id={state.player.avatar} mood={currentMood(state)} />
-        </div>
-      </div>
-      <figcaption className="pt-1.5 text-center text-[22px] leading-tight text-[#30302e] [font-family:var(--font-hand)]">
-        {state.player.name}, {ageOf(state)}
-      </figcaption>
-    </figure>
-  );
-}
-
-function StickyNote({ state }: { state: GameState }) {
+function DeskNote({ state }: { state: GameState }) {
   const ns = nextStatus(state);
   return (
-    <div className="w-52 rotate-[2.5deg] bg-[#ffe680] p-4 text-[#3a3320] shadow-[0_12px_22px_rgb(0_0_0/0.18)] [font-family:var(--font-hand)]">
-      <p className="text-[20px] font-bold leading-tight">don&apos;t forget:</p>
-      <ul className="mt-1 space-y-0.5 text-[19px] leading-snug">
-        <li>net worth {money(netWorth(state))}</li>
-        <li>peak {money(state.run.peakNetWorth)}</li>
-        {ns.label && <li>next: {ns.hint.toLowerCase()}</li>}
-        {state.run.rugs > 0 && <li className="text-[#b42318]">rugged {state.run.rugs}x. learn.</li>}
-      </ul>
-    </div>
+    <StickyNote title="don't forget:">
+      <li>net worth {money(netWorth(state))}</li>
+      <li>peak {money(state.run.peakNetWorth)}</li>
+      {ns.label && <li>next: {ns.hint.toLowerCase()}</li>}
+      {state.run.rugs > 0 && <li className="text-[#b42318]">rugged {state.run.rugs}x. learn.</li>}
+    </StickyNote>
   );
 }
 
@@ -738,22 +685,10 @@ function NameTag({ name }: { name: string }) {
   );
 }
 
-const ZIGZAG = (() => {
-  const teeth = 18;
-  const pts = ["0 0", "100% 0", "100% calc(100% - 8px)"];
-  for (let i = teeth; i >= 0; i--) pts.push(`${(i / teeth) * 100}% ${i % 2 ? "100%" : "calc(100% - 8px)"}`);
-  return `polygon(${pts.join(",")})`;
-})();
-
 function Receipt({ state }: { state: GameState }) {
   const lines = state.log.filter((l) => !/quiet month|turned/.test(l.text)).slice(-9).reverse();
   return (
-    <div className="num w-60 rotate-[-1.5deg] bg-[#fdfdfb] px-4 pb-6 pt-4 text-[11px] text-[#2c2c2a] shadow-[0_12px_22px_rgb(0_0_0/0.16)]" style={{ clipPath: ZIGZAG }}>
-      <p className="text-center text-[13px] font-medium tracking-[0.2em]">DEGEN MART</p>
-      <p className="text-center text-[10px] text-black/50">
-        {MONTHS[state.month % 12]} · AGE {ageOf(state)} · RUN {state.seed}
-      </p>
-      <div className="my-2 border-t border-dashed border-black/30" />
+    <Slip title="DEGEN MART" subtitle={`${MONTHS[state.month % 12]} · AGE ${ageOf(state)} · RUN ${state.seed}`} footer="THANK YOU FOR YOUR LIQUIDITY">
       {lines.length === 0 ? (
         <p className="text-center text-black/50">NO TRANSACTIONS YET</p>
       ) : (
@@ -765,12 +700,11 @@ function Receipt({ state }: { state: GameState }) {
           ))}
         </ul>
       )}
-      <div className="my-2 border-t border-dashed border-black/30" />
+      <SlipRule />
       <p className="flex justify-between font-medium">
         <span>NET WORTH</span>
         <span>{money(netWorth(state))}</span>
       </p>
-      <p className="mt-2 text-center text-[10px] text-black/50">THANK YOU FOR YOUR LIQUIDITY</p>
-    </div>
+    </Slip>
   );
 }

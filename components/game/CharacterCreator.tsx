@@ -6,11 +6,18 @@ import { COUNTRIES, PORTRAITS } from "@/lib/game/config";
 import { money } from "@/lib/game/format";
 import { newSeed } from "@/lib/game/rng";
 import { STAT_ROWS, StatBar } from "./bits";
+import { useIsDesktop } from "./hooks";
+import { PhoneDesk, PhotoFrame, Slip, SlipRule, StickyNote } from "./phone/Desk";
 import { FullPortrait } from "./Portrait";
-import { Logo } from "./Logo";
 
-const field = "mt-1.5 w-full rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-[15px] outline-none focus:border-mint";
+const GENDERS: [CharacterDraft["gender"], string][] = [
+  ["male", "Male"],
+  ["female", "Female"],
+  ["other", "Other"],
+];
+const AGES = [18, 19, 20, 21];
 
+/** New life setup, shown on the same phone you'll live it on. */
 export function CharacterCreator({
   initialSeed,
   onBack,
@@ -20,6 +27,7 @@ export function CharacterCreator({
   onBack: () => void;
   onStart: (draft: CharacterDraft, seed: number) => void;
 }) {
+  const isDesktop = useIsDesktop();
   const [seed, setSeed] = useState(initialSeed);
   const [seedInput, setSeedInput] = useState(String(initialSeed));
   const [draft, setDraft] = useState<CharacterDraft>(() => randomDraft(initialSeed));
@@ -37,29 +45,67 @@ export function CharacterCreator({
     if (Number.isInteger(n) && n > 0 && n < 1e9) setSeed(n);
   };
   const set = <K extends keyof CharacterDraft>(k: K, v: CharacterDraft[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const name = draft.name.trim() || "Anon";
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-8 lg:px-10">
-      <div className="flex items-center justify-between">
-        <Logo />
-        <button type="button" onClick={onBack} className="rounded-full px-3 py-1.5 text-[13px] font-semibold text-muted hover:bg-raised hover:text-text">
-          ← Back
-        </button>
-      </div>
-      <h1 className="mt-8 text-4xl font-extrabold tracking-[-0.03em]">Who are you this time?</h1>
-      <p className="mt-2 text-muted">Pick who you are. The seed decides your stats and starting money.</p>
-
+    <PhoneDesk
+      framed={isDesktop}
+      left={
+        <>
+          <PhotoFrame avatar={draft.avatar} mood="very_happy" caption={`${name}, ${draft.age}`} />
+          <StickyNote title="today:">
+            <li>get born</li>
+            <li>start with {money(rolled.profile.cash)}</li>
+            <li>don&apos;t buy the top</li>
+          </StickyNote>
+        </>
+      }
+      right={
+        <Slip title="DEGEN GENERAL" subtitle={`BIRTH RECORD · RUN ${seed}`} footer="WELCOME TO THE TRENCHES">
+          <ul className="space-y-1">
+            <SlipLine label="NAME" value={name.toUpperCase()} />
+            <SlipLine label="FROM" value={draft.country.toUpperCase()} />
+            <SlipLine label="AGE" value={String(draft.age)} />
+            <SlipRule />
+            {STAT_ROWS.map(([k, label]) => (
+              <SlipLine key={k} label={label.split(" ").slice(1).join(" ").toUpperCase()} value={String(rolled.stats[k])} />
+            ))}
+          </ul>
+          <SlipRule />
+          <p className="flex justify-between font-medium">
+            <span>STARTING CASH</span>
+            <span>{money(rolled.profile.cash)}</span>
+          </p>
+        </Slip>
+      }
+    >
       <form
-        className="mt-8 grid gap-4 lg:grid-cols-2"
+        className="relative flex h-full flex-col bg-[#f2f2f7] text-text [font-family:system-ui,-apple-system,'Segoe_UI',sans-serif]"
         onSubmit={(e) => {
           e.preventDefault();
           onStart(draft, seed);
         }}
       >
-        <section className="panel p-5">
-          <fieldset>
-            <legend className="eyebrow">Character</legend>
-            <div className="mt-2 grid grid-cols-2 gap-3">
+        <div className={`flex h-11 shrink-0 items-end justify-between px-7 pb-1.5 text-[13px] font-semibold ${isDesktop ? "" : "pt-2"}`}>
+          <span>New life</span>
+          <span className="opacity-60">DegenOS</span>
+        </div>
+        <header className="flex items-center px-2 py-1.5">
+          <button type="button" onClick={onBack} className="rounded-full px-2 py-1 text-[16px] text-mint">
+            <span className="mr-0.5 text-[22px] leading-none" aria-hidden>
+              ‹
+            </span>
+            Back
+          </button>
+        </header>
+
+        <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <h1 className="text-[30px] font-bold leading-tight tracking-tight">Who are you this time?</h1>
+          <p className="mt-1 text-[14px] text-muted">Pick who you are. The seed decides your stats and starting money.</p>
+
+          <fieldset className="mt-5">
+            <legend className="sr-only">Character</legend>
+            <div className="grid grid-cols-2 gap-3">
               {PORTRAITS.map((p) => {
                 const on = draft.avatar === p.id;
                 return (
@@ -69,88 +115,131 @@ export function CharacterCreator({
                     aria-label={p.label}
                     aria-pressed={on}
                     onClick={() => set("avatar", p.id)}
-                    className={`relative h-52 overflow-hidden rounded-2xl border transition-colors ${on ? "border-mint bg-mint/[0.07]" : "border-line bg-raised hover:border-line-strong"}`}
+                    className={`relative h-44 overflow-hidden rounded-[22px] bg-white transition-shadow ${on ? "ring-[3px] ring-mint" : "ring-1 ring-black/5"}`}
                   >
-                    <span className="absolute inset-x-0 -bottom-10 top-7 flex justify-center">
+                    <span className="absolute inset-x-0 -bottom-8 top-5 flex justify-center">
                       <FullPortrait id={p.id} priority />
                     </span>
-                    <span className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-panel to-transparent" aria-hidden />
-                    {on && <span className="absolute right-2.5 top-2.5 grid size-5 place-items-center rounded-full bg-mint text-[11px] font-black text-white">✓</span>}
+                    {on && <span className="absolute right-2.5 top-2.5 grid size-6 place-items-center rounded-full bg-mint text-[12px] font-black text-white">✓</span>}
                   </button>
                 );
               })}
             </div>
           </fieldset>
 
-          <label className="mt-5 block">
-            <span className="eyebrow">Name</span>
-            <input value={draft.name} onChange={(e) => set("name", e.target.value.slice(0, 20))} className={`${field} font-bold`} required />
-          </label>
-
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <label>
-              <span className="eyebrow">Country</span>
-              <select value={draft.country} onChange={(e) => set("country", e.target.value)} className={field}>
+          <Group label="About you">
+            <Row label="Name">
+              <input
+                value={draft.name}
+                onChange={(e) => set("name", e.target.value.slice(0, 20))}
+                required
+                aria-label="Name"
+                className="min-w-0 flex-1 bg-transparent text-right text-[16px] font-semibold outline-none placeholder:text-faint"
+                placeholder="Anon"
+              />
+            </Row>
+            <Row label="Country">
+              <select value={draft.country} onChange={(e) => set("country", e.target.value)} aria-label="Country" className="min-w-0 cursor-pointer appearance-none bg-transparent text-right text-[16px] text-muted outline-none">
                 {COUNTRIES.map((c) => (
                   <option key={c}>{c}</option>
                 ))}
               </select>
-            </label>
-            <label>
-              <span className="eyebrow">Gender</span>
-              <select value={draft.gender} onChange={(e) => set("gender", e.target.value as CharacterDraft["gender"])} className={field}>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </label>
-          </div>
+              <span className="text-[18px] leading-none text-faint" aria-hidden>
+                ›
+              </span>
+            </Row>
+            <Row label="Gender">
+              <Segmented label="Gender" options={GENDERS} value={draft.gender} onChange={(v) => set("gender", v)} />
+            </Row>
+            <Row label="Age">
+              <Segmented label="Starting age" options={AGES.map((a) => [a, String(a)])} value={draft.age} onChange={(v) => set("age", v)} />
+            </Row>
+          </Group>
 
-          <fieldset className="mt-5">
-            <legend className="eyebrow">Starting age</legend>
-            <div className="mt-2 grid grid-cols-4 gap-2">
-              {[18, 19, 20, 21].map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  aria-pressed={draft.age === a}
-                  onClick={() => set("age", a)}
-                  className={`num rounded-full border py-2 text-[15px] ${draft.age === a ? "border-mint bg-mint/10 text-mint" : "border-line-strong text-muted hover:text-text"}`}
-                >
-                  {a}
-                </button>
+          <Group label="Rolled by the seed" aside={`${rolled.profile.label} start · ${money(rolled.profile.cash)}`}>
+            <div className="space-y-2.5 px-4 py-3.5">
+              {STAT_ROWS.map(([k, label]) => (
+                <StatBar key={k} label={label} value={rolled.stats[k]} compact />
               ))}
             </div>
-          </fieldset>
-        </section>
+          </Group>
 
-        <section className="panel flex flex-col p-5">
-          <div className="flex items-baseline justify-between">
-            <h2 className="eyebrow">Rolled by the seed</h2>
-            <span className="text-sm">
-              {rolled.profile.label} start · <span className="num text-mint">{money(rolled.profile.cash)}</span>
-            </span>
-          </div>
-          <div className="mt-4 space-y-3">
-            {STAT_ROWS.map(([k, label]) => (
-              <StatBar key={k} label={label} value={rolled.stats[k]} />
-            ))}
-          </div>
-          <div className="mt-6 flex items-end gap-2">
-            <label className="flex-1">
-              <span className="eyebrow">Run seed</span>
-              <input inputMode="numeric" value={seedInput} onChange={(e) => applySeed(e.target.value.replace(/\D/g, ""))} className={`${field} num`} />
-            </label>
-            <button type="button" onClick={reroll} className="rounded-full border border-line-strong px-4 py-2.5 text-[13px] font-semibold hover:bg-raised">
-              🎲 Reroll
+          <Group label="Run seed" footer="Share a seed and someone else gets the same starting life.">
+            <Row label="Seed">
+              <input
+                inputMode="numeric"
+                value={seedInput}
+                onChange={(e) => applySeed(e.target.value.replace(/\D/g, ""))}
+                aria-label="Run seed"
+                className="num min-w-0 flex-1 bg-transparent text-right text-[15px] outline-none"
+              />
+            </Row>
+            <button type="button" onClick={reroll} className="w-full px-4 py-3 text-left text-[16px] text-mint active:bg-black/5">
+              🎲 Reroll a new life
             </button>
-          </div>
-          <p className="mt-2 text-xs text-faint">Share a seed and someone else gets the same starting life.</p>
-          <button type="submit" className="age-btn mt-auto w-full py-3.5 text-[15px] font-extrabold max-lg:mt-6">
-            Be born
+          </Group>
+        </div>
+
+        <div className="shrink-0 px-4 pb-5 pt-2">
+          <button type="submit" className="age-btn flex w-full items-center justify-center gap-2 py-3.5 text-[16px] font-extrabold shadow-[0_8px_20px_rgb(0_0_0/0.12)]">
+            <span aria-hidden>👶</span> Be born
           </button>
-        </section>
+        </div>
       </form>
-    </main>
+    </PhoneDesk>
+  );
+}
+
+/** An iOS-style inset grouped list. */
+function Group({ label, aside, footer, children }: { label: string; aside?: string; footer?: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-6">
+      <div className="flex items-baseline justify-between px-4 pb-1.5 text-[12px] uppercase tracking-wide text-muted">
+        <h2>{label}</h2>
+        {aside && <span className="num normal-case tracking-normal text-mint">{aside}</span>}
+      </div>
+      <div className="divide-y divide-black/[0.07] overflow-hidden rounded-[14px] bg-white">{children}</div>
+      {footer && <p className="px-4 pt-1.5 text-[12px] text-muted">{footer}</p>}
+    </section>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-12 items-center gap-3 px-4 py-2">
+      <span className="shrink-0 text-[16px]">{label}</span>
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">{children}</div>
+    </div>
+  );
+}
+
+function Segmented<T extends string | number>({ label, options, value, onChange }: { label: string; options: [T, string][]; value: T; onChange: (v: T) => void }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex rounded-[9px] bg-[#767680]/[0.12] p-0.5">
+      {options.map(([v, text]) => {
+        const on = v === value;
+        return (
+          <button
+            key={String(v)}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(v)}
+            className={`rounded-[7px] px-2.5 py-1 text-[13px] font-semibold transition-colors ${on ? "bg-white shadow-[0_1px_3px_rgb(0_0_0/0.15)]" : "text-muted"}`}
+          >
+            {text}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SlipLine({ label, value }: { label: string; value: string }) {
+  return (
+    <li className="flex justify-between gap-3">
+      <span>{label}</span>
+      <span className="truncate">{value}</span>
+    </li>
   );
 }

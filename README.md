@@ -6,7 +6,7 @@ BitLife for crypto degenerates. A browser life simulator where you discover meme
 
 ```bash
 npm install
-npm run dev     # http://localhost:3000
+npm run dev     # http://localhost:3000 (landing), /play (the game)
 npm test        # engine tests + balance simulation (~2 min)
 npm run build
 ```
