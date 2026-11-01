@@ -25,7 +25,7 @@ export function RecapSection() {
         </div>
         <div className="flex items-center justify-center gap-6 max-sm:flex-col">
           <PhotoFrame avatar="p1" mood="very_sad" caption="Sam, 76" />
-          <Slip title="DEGEN LIFE" subtitle="RUN #482913 · FINAL RECEIPT" footer="THANK YOU FOR YOUR LIQUIDITY">
+          <Slip title="NORMIE LIFE" subtitle="RUN #482913 · FINAL RECEIPT" footer="THANK YOU FOR YOUR LIQUIDITY">
             <ul className="space-y-1">
               {LINES.map(([k, v]) => (
                 <li key={k} className="flex justify-between gap-3">

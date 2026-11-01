@@ -6,7 +6,7 @@ export type PhoneApp = { id: AppId; name: string; glyph: string; bg: string; img
 
 /** Icons live in public/apps. `bg` matches each icon's background so the launch splash blends in. */
 export const APPS: PhoneApp[] = [
-  { id: "charts", name: "Charts", glyph: "📈", bg: "#ccff00", img: "/apps/robinhood.png" },
+  { id: "charts", name: "Charts", glyph: "📈", bg: "#05f594", img: "/apps/pump.fun.png" },
   { id: "bags", name: "Bags", glyph: "👜", bg: "#9786e4", img: "/apps/phantom.jpg" },
   { id: "chirp", name: "Chirp", glyph: "🐦", bg: "#000000", img: "/apps/X.jpg" },
   { id: "bank", name: "Bank", glyph: "🏦", bg: "#ffffff", img: "/apps/Revolut.png" },

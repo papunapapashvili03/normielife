@@ -1,4 +1,4 @@
-// Core data types for the DEGEN LIFE engine. Pure data — no React.
+// Core data types for the NORMIE LIFE engine. Pure data — no React.
 
 export type StatKey =
   | "luck"

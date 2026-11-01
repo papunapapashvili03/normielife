@@ -88,7 +88,7 @@ export function CharacterCreator({
       >
         <div className={`flex h-11 shrink-0 items-end justify-between px-7 pb-1.5 text-[13px] font-semibold ${isDesktop ? "" : "pt-2"}`}>
           <span>New life</span>
-          <span className="opacity-60">DegenOS</span>
+          <span className="opacity-60">NormieOS</span>
         </div>
         <header className="flex items-center px-2 py-1.5">
           <button type="button" onClick={onBack} className="rounded-full px-2 py-1 text-[16px] text-mint">

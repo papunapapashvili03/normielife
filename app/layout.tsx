@@ -21,7 +21,7 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DEGEN LIFE",
+  title: "NORMIE LIFE",
   description: "BitLife for crypto degenerates. Buy shitcoins, get rugged, work at McDonald's, come back, become a legend.",
 };
 

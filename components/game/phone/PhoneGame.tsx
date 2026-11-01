@@ -353,7 +353,7 @@ function notifFor(l: LogEntry): { emoji: string; app: string; icon?: PhoneApp } 
   if (/ignored|Dodged|went nowhere/.test(l.text)) return { emoji: "🐦", app: "Chirp", icon: appById("chirp") };
   if (/Bought|Sold|rugged|Day trade|📈|📉|🚨|🧻/.test(l.text)) return { emoji: "📈", app: "Charts", icon: appById("charts") };
   if (/rent|bags to pay/i.test(l.text)) return { emoji: "🏦", app: "Bank", icon: appById("bank") };
-  return { emoji: "🔔", app: "DegenOS" };
+  return { emoji: "🔔", app: "NormieOS" };
 }
 
 function LockScreen({ state, setScreen, sleptFrom }: ScreenProps) {
@@ -649,7 +649,7 @@ function AppView({ state, dispatch, onExit, setScreen, app, coinId }: ScreenProp
             💾 Save and exit
           </button>
           <p className="px-4 py-3 text-[12px] text-muted">
-            DegenOS · Run #{state.seed}
+            NormieOS · Run #{state.seed}
           </p>
         </div>
       )}

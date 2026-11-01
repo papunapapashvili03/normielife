@@ -1,4 +1,4 @@
-# DEGEN LIFE
+# NORMIE LIFE
 
 BitLife for crypto degenerates. A browser life simulator where you discover memecoins on TikTok, buy shitcoins, get rugged, work at McDonald's, come back, and maybe become a legend.
 

@@ -60,7 +60,7 @@ export function shareText(s: GameState): string {
   const rc = buildRecap(s);
   const get = (l: string) => rc.lines.find((x) => x.label === l)?.value ?? "";
   return [
-    "DEGEN LIFE",
+    "NORMIE LIFE",
     "",
     rc.name.toUpperCase(),
     `Started: ${get("Started with")}`,

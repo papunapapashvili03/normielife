@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GameRoot } from "@/components/game/GameRoot";
 
 export const metadata: Metadata = {
-  title: "Play · DEGEN LIFE",
+  title: "Play · NORMIE LIFE",
 };
 
 export default function Play() {
