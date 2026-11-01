@@ -96,8 +96,8 @@ export function sell(s: GameState, coinId: string, fraction: number): SellResult
   const p = getPosition(s, coinId);
   const c = getCoin(s, coinId);
   const res: SellResult = { proceeds: 0, pnl: 0, multiple: 0 };
-  if (!p || !c || c.rugged) return res;
   const f = Math.min(1, Math.max(0, fraction));
+  if (!p || !c || c.rugged || f === 0) return res;
   const units = p.units * f;
   const value = units * c.price;
   const liq = Math.max(1, liquidity(c));

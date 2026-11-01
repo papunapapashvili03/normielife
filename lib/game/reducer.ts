@@ -38,7 +38,12 @@ export type Action =
   | { type: "CALL_IGNORE" };
 
 export function canPost(s: GameState): boolean {
-  return !s.ended && !s.current && !s.sim && "discovered" in s.flags && s.lastSeen["social_post"] !== s.month;
+  return !s.ended && !s.current && !s.sim && !s.offer && "discovered" in s.flags && s.lastSeen["social_post"] !== s.month;
+}
+
+/** Skipping time with a call on screen means you ignored it. */
+function dropCall(s: GameState) {
+  if (s.offer) ignoreCall(s, false);
 }
 
 export function reducer(state: GameState | null, action: Action): GameState | null {
@@ -60,23 +65,22 @@ export function reducer(state: GameState | null, action: Action): GameState | nu
       break;
     case "NEXT_MONTH":
       if (s.sim || s.current) return state;
-      // Sleeping through a call means you ignored it; the new month starts fresh.
-      if (s.offer) ignoreCall(s, false);
-      s.week = 0;
+      dropCall(s);
       nextMonth(s);
       break;
     case "BUY":
-      if (s.current || s.sim || s.ended) return state;
+      // The called coin is off-limits until you answer the call (its whole day is already decided).
+      if (s.current || s.sim || s.ended || s.offer?.sim.coinId === action.coinId) return state;
       buy(s, action.coinId, action.amount);
-      updateProgress(s);
       break;
     case "SELL":
       // The simulated trade manages its own coin until the day is over.
       if (s.ended || s.sim?.coinId === action.coinId) return state;
       sell(s, action.coinId, action.fraction);
-      updateProgress(s);
       break;
     case "WORK":
+      if (s.current || s.sim) return state;
+      dropCall(s);
       work(s, action.months);
       break;
     case "QUIT_JOB":
@@ -89,9 +93,12 @@ export function reducer(state: GameState | null, action: Action): GameState | nu
       break;
     case "RETIRE":
       if (s.current || s.sim) return state;
+      dropCall(s);
       retire(s);
       break;
     case "WORK_TO_BASELINE":
+      if (s.current || s.sim) return state;
+      dropCall(s);
       workUntil(s, BASELINE_CASH);
       break;
     case "HUNT_TRADE":
@@ -141,5 +148,7 @@ export function reducer(state: GameState | null, action: Action): GameState | nu
       delete s.flags.mcd_intro;
       break;
   }
+  // Prices, positions or cash may have moved; keep peak, milestones and status in step.
+  if (!s.ended) updateProgress(s);
   return s;
 }

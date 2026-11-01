@@ -36,6 +36,7 @@ export function OrderTicket({
   const chosen = Math.min(Number(amount) || 0, cap);
   const band = chosen > 0 ? sizeBandFor(chosen, nw) : null;
   const blocked = !!state.current || !!state.sim;
+  const called = state.offer?.sim.coinId === coinId;
   const impact = (v: number) => Math.min(MARKET.sellImpactCap, v / (Math.max(1, liquidity(coin)) * MARKET.sellImpactK));
   const sellValue = value * sellFrac;
   const k = state.player.stats.knowledge;
@@ -137,7 +138,9 @@ export function OrderTicket({
         </div>
       ) : (
         <div className="mt-3">
-          {blocked ? (
+          {called ? (
+            <p className="rounded-xl bg-raised p-3 text-[13px] text-muted">Answer the call first: go in or ignore it.</p>
+          ) : blocked ? (
             <p className="rounded-xl bg-raised p-3 text-[13px] text-muted">Finish what&apos;s on the board first, then come back to buy.</p>
           ) : cap < 1 ? (
             <p className="rounded-xl bg-raised p-3 text-[13px] text-muted">No cash to buy with. {state.job.employed ? "Payday is coming." : "Maybe pick up some shifts?"}</p>

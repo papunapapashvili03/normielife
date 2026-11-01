@@ -36,6 +36,7 @@ export function expenses(s: GameState): number {
 export function advanceOneMonth(s: GameState): Signal[] {
   const ageBefore = ageOf(s);
   s.month++;
+  s.week = 0;
   const age = ageOf(s);
   if (age !== ageBefore) addLog(s, `🎂 You turned ${age}.`);
 

@@ -187,7 +187,7 @@ function sceneFor(s: GameState, scenario: SimScenario, ticker: string, mc: numbe
 }
 
 export function canStartSim(s: GameState): boolean {
-  return !s.ended && !s.current && !s.sim && "discovered" in s.flags && s.cash >= SIM.minCash;
+  return !s.ended && !s.current && !s.sim && !s.offer && "discovered" in s.flags && s.cash >= SIM.minCash;
 }
 
 export function canHunt(s: GameState): boolean {

@@ -32,7 +32,8 @@ export function MarketList({ state, selected, onSelect }: { state: GameState; se
     );
   }
   const k = state.player.stats.knowledge;
-  let coins = state.coins.filter((c) => !c.dead);
+  // A coin that was just called stays hidden until you answer the call.
+  let coins = state.coins.filter((c) => !c.dead && c.id !== state.offer?.sim.coinId);
   if (filter === "new") coins = coins.filter((c) => c.ageMonths === 0);
   if (filter === "holding") coins = state.coins.filter((c) => getPosition(state, c.id));
   coins = [...coins].sort((a, b) => (a.ageMonths === 0 ? 0 : 1) - (b.ageMonths === 0 ? 0 : 1) || lastChange(b) - lastChange(a));
